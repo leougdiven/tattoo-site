@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INK RITUAL · 纹身预约</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Serif+SC:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0805;
+    --deep: #110f0c;
+    --surface: #1a1714;
+    --border: #2e2a26;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #7a6430;
+    --ash: #8a8278;
+    --smoke: #5a5650;
+    --cream: #f0ebe3;
+    --red: #8b2020;
+    --red-bright: #b83030;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 8px; height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 32px; height: 32px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    opacity: 0.6;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.5;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 56px;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.4s, background 0.4s;
+  }
+  nav.scrolled {
+    border-color: var(--border);
+    background: rgba(10,8,5,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .logo {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 18px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-decoration: none;
+  }
+  .logo span { color: var(--cream); }
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ash);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-cta {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--black);
+    background: var(--gold);
+    border: none;
+    padding: 10px 24px;
+    cursor: none;
+    transition: background 0.3s;
+    text-decoration: none;
+  }
+  .nav-cta:hover { background: var(--gold-light); }
+
+  /* ─── HERO ─── */
+  #hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 60% 80% at 70% 50%, rgba(100,60,10,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 30% 50% at 20% 80%, rgba(139,32,32,0.08) 0%, transparent 60%),
+      var(--black);
+  }
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+  .hero-content {
+    position: relative;
+    padding: 0 56px;
+    max-width: 900px;
+    animation: heroIn 1.4s cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  @keyframes heroIn {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: var(--gold);
+  }
+  .hero-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(52px, 9vw, 110px);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+  }
+  .hero-title .line1 { display: block; color: var(--cream); }
+  .hero-title .line2 { 
+    display: block; 
+    color: transparent;
+    -webkit-text-stroke: 1px var(--gold-dim);
+  }
+  .hero-title .line3 { display: block; color: var(--gold); }
+  .hero-sub {
+    font-size: 18px;
+    font-style: italic;
+    color: var(--ash);
+    max-width: 480px;
+    line-height: 1.7;
+    margin-bottom: 56px;
+    font-weight: 300;
+  }
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--gold);
+    color: var(--black);
+    text-decoration: none;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    padding: 18px 40px;
+    transition: all 0.3s;
+    cursor: none;
+  }
+  .btn-primary:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 60px rgba(201,168,76,0.3);
+  }
+  .btn-ghost {
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ash);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.3s;
+    cursor: none;
+  }
+  .btn-ghost:hover { color: var(--cream); }
+  .hero-deco {
+    position: absolute;
+    right: 56px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 320px;
+    opacity: 0.15;
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(-50%) rotate(0deg); }
+    50% { transform: translateY(calc(-50% - 12px)) rotate(1deg); }
+  }
+
+  /* ─── SECTIONS COMMON ─── */
+  section { position: relative; }
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.6em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--cream);
+  }
+
+  /* ─── ARTISTS ─── */
+  #artists {
+    padding: 120px 56px;
+    border-top: 1px solid var(--border);
+  }
+  .artists-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 72px;
+  }
+  .artists-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+  .artist-card {
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+    background: var(--surface);
+  }
+  .artist-img {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: var(--deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .artist-img svg {
+    width: 80px;
+    opacity: 0.15;
+    transition: transform 0.6s;
+  }
+  .artist-img-bg {
+    position: absolute;
+    inset: 0;
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .artist-card:nth-child(1) .artist-img-bg {
+    background: linear-gradient(135deg, #1a1208 0%, #2a1f0e 50%, #1a0f0a 100%);
+  }
+  .artist-card:nth-child(2) .artist-img-bg {
+    background: linear-gradient(135deg, #0e1a1a 0%, #0a1520 50%, #0e0a1a 100%);
+  }
+  .artist-card:nth-child(3) .artist-img-bg {
+    background: linear-gradient(135deg, #1a0e0e 0%, #201010 50%, #150e15 100%);
+  }
+  .artist-card:hover .artist-img-bg { transform: scale(1.05); }
+  .artist-avatar {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .artist-initials {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 48px;
+    color: var(--gold);
+    opacity: 0.4;
+    transition: opacity 0.3s;
+  }
+  .artist-card:hover .artist-initials { opacity: 0.7; }
+  .artist-info {
+    padding: 24px 28px;
+    border-top: 1px solid var(--border);
+  }
+  .artist-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 16px;
+    color: var(--cream);
+    margin-bottom: 6px;
+  }
+  .artist-style {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 16px;
+  }
+  .artist-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--smoke);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+  }
+  .artist-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,8,5,0.95) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s;
+    display: flex;
+    align-items: flex-end;
+    padding: 28px;
+  }
+  .artist-card:hover .artist-overlay { opacity: 1; }
+  .artist-book-btn {
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 12px 24px;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    cursor: none;
+    width: 100%;
+    transition: background 0.3s;
+  }
+  .artist-book-btn:hover { background: var(--gold-light); }
+
+  /* ─── STYLES ─── */
+  #styles {
+    padding: 120px 56px;
+    background: var(--deep);
+    border-top: 1px solid var(--border);
+  }
+  .styles-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 64px;
+  }
+  .style-card {
+    border: 1px solid var(--border);
+    padding: 40px 32px;
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+    transition: border-color 0.3s;
+  }
+  .style-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .style-card:hover { border-color: var(--gold-dim); }
+  .style-card:hover::before { opacity: 1; }
+  .style-icon {
+    font-size: 36px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .style-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 15px;
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+  .style-desc {
+    font-size: 14px;
+    color: var(--ash);
+    line-height: 1.7;
+    font-style: italic;
+  }
+  .style-num {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 48px;
+    color: var(--border);
+    font-weight: 900;
+    transition: color 0.3s;
+  }
+  .style-card:hover .style-num { color: rgba(201,168,76,0.1); }
+
+  /* ─── BOOKING FORM ─── */
+  #booking {
+    padding: 120px 56px;
+    border-top: 1px solid var(--border);
+  }
+  .booking-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 80px;
+    margin-top: 72px;
+  }
+  .booking-info h3 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 22px;
+    color: var(--gold);
+    margin-bottom: 20px;
+    margin-top: 40px;
+  }
+  .booking-info h3:first-child { margin-top: 0; }
+  .booking-info p {
+    font-size: 15px;
+    color: var(--ash);
+    line-height: 1.8;
+    font-style: italic;
+  }
+  .info-list {
+    list-style: none;
+    margin-top: 16px;
+  }
+  .info-list li {
+    font-size: 14px;
+    color: var(--ash);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .info-list li::before {
+    content: '◆';
+    color: var(--gold-dim);
+    font-size: 8px;
+    flex-shrink: 0;
+  }
+
+  .booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 2px;
+  }
+  .form-group label {
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    padding: 14px 20px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+    font-size: 16px;
+    padding: 14px 20px;
+    outline: none;
+    transition: border-color 0.3s;
+    cursor: none;
+    width: 100%;
+    -webkit-appearance: none;
+  }
+  .form-group select option { background: var(--deep); }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--gold-dim);
+    background: rgba(26,23,20,0.8);
+  }
+  .form-group textarea {
+    resize: vertical;
+    min-height: 140px;
+    font-size: 15px;
+    font-style: italic;
+    line-height: 1.7;
+  }
+
+  /* Size selector */
+  .size-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    padding: 16px;
+  }
+  .size-opt {
+    display: none;
+  }
+  .size-opt + label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    border: 1px solid var(--border);
+    cursor: none;
+    transition: all 0.3s;
+    text-align: center;
+  }
+  .size-opt + label .size-icon { font-size: 20px; }
+  .size-opt + label .size-name {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--smoke);
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .size-opt:checked + label {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.1);
+  }
+  .size-opt:checked + label .size-name { color: var(--gold); }
+
+  /* Body location */
+  .location-select {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    padding: 12px;
+  }
+  .loc-opt { display: none; }
+  .loc-opt + label {
+    padding: 10px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-align: center;
+    color: var(--smoke);
+    border: 1px solid transparent;
+    cursor: none;
+    transition: all 0.25s;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .loc-opt:checked + label {
+    border-color: var(--gold-dim);
+    color: var(--gold);
+    background: rgba(201,168,76,0.06);
+  }
+  .loc-opt + label:hover { color: var(--ash); }
+
+  /* Budget */
+  .budget-slider-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    padding: 20px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .budget-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .budget-value {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 22px;
+    color: var(--gold);
+  }
+  .budget-hint {
+    font-size: 12px;
+    color: var(--smoke);
+    font-style: italic;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    cursor: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    background: var(--gold);
+    border-radius: 50%;
+    cursor: none;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    background: linear-gradient(to right, var(--gold) 0%, var(--gold) var(--pct,50%), var(--border) var(--pct,50%));
+    height: 2px;
+  }
+
+  /* Time slots */
+  .slot-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    padding: 12px;
+  }
+  .slot-opt { display: none; }
+  .slot-opt + label {
+    padding: 10px 6px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--smoke);
+    border: 1px solid transparent;
+    cursor: none;
+    transition: all 0.25s;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .slot-opt:checked + label {
+    border-color: var(--gold-dim);
+    color: var(--gold);
+    background: rgba(201,168,76,0.06);
+  }
+  .slot-opt.taken + label {
+    color: var(--border);
+    text-decoration: line-through;
+    cursor: not-allowed;
+  }
+
+  .form-submit {
+    margin-top: 2px;
+    background: var(--gold);
+    border: none;
+    color: var(--black);
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    padding: 22px;
+    cursor: none;
+    transition: all 0.3s;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  .form-submit::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+  .form-submit:hover { background: var(--gold-light); }
+  .form-submit:hover::after { transform: translateX(100%); }
+
+  /* Success state */
+  .form-success {
+    display: none;
+    text-align: center;
+    padding: 80px 40px;
+    border: 1px solid var(--gold-dim);
+    background: rgba(201,168,76,0.03);
+  }
+  .form-success.show { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .form-success h3 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 24px;
+    color: var(--gold);
+  }
+  .form-success p { color: var(--ash); font-style: italic; font-size: 16px; }
+  .success-icon { font-size: 48px; }
+
+  /* ─── PROCESS ─── */
+  #process {
+    padding: 120px 56px;
+    background: var(--deep);
+    border-top: 1px solid var(--border);
+  }
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-top: 72px;
+  }
+  .step {
+    padding: 48px 36px;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+  }
+  .step::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transition: transform 0.4s;
+    transform-origin: left;
+  }
+  .step:hover::after { transform: scaleX(1); }
+  .step-num {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 56px;
+    color: var(--border);
+    font-weight: 900;
+    margin-bottom: 24px;
+    line-height: 1;
+    transition: color 0.3s;
+  }
+  .step:hover .step-num { color: rgba(201,168,76,0.15); }
+  .step-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 15px;
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+  .step-desc {
+    font-size: 14px;
+    color: var(--ash);
+    line-height: 1.8;
+    font-style: italic;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 72px 56px;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 56px;
+  }
+  .footer-brand .logo { font-size: 20px; display: block; margin-bottom: 20px; }
+  .footer-brand p {
+    font-size: 14px;
+    color: var(--smoke);
+    line-height: 1.8;
+    font-style: italic;
+  }
+  .footer-col h4 {
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 24px;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col ul li { margin-bottom: 12px; }
+  .footer-col ul a {
+    font-size: 14px;
+    color: var(--smoke);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .footer-col ul a:hover { color: var(--ash); }
+  .footer-bottom {
+    padding: 24px 56px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-bottom p {
+    font-size: 12px;
+    color: var(--smoke);
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── SCROLL REVEAL ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.8s cubic-bezier(0.23, 1, 0.32, 1), transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* ─── DECORATIVE SVG ─── */
+  .mandala {
+    width: 100%;
+    height: 100%;
+    animation: spin 60s linear infinite;
+    opacity: 0.6;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    #hero .hero-content { padding: 0 24px; }
+    .hero-deco { display: none; }
+    #artists, #styles, #booking, #process { padding: 80px 24px; }
+    .artists-grid { grid-template-columns: 1fr; }
+    .styles-grid { grid-template-columns: repeat(2, 1fr); }
+    .booking-layout { grid-template-columns: 1fr; gap: 40px; }
+    .form-row { grid-template-columns: 1fr; }
+    .process-steps { grid-template-columns: 1fr 1fr; }
+    footer { grid-template-columns: 1fr 1fr; padding: 56px 24px; }
+    .footer-bottom { padding: 20px 24px; flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="logo">INK<span> RITUAL</span></a>
+  <ul class="nav-links">
+    <li><a href="#artists">纹身师</a></li>
+    <li><a href="#styles">风格</a></li>
+    <li><a href="#process">流程</a></li>
+    <li><a href="#booking">预约</a></li>
+  </ul>
+  <a href="#booking" class="nav-cta">立即预约</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">上海 · 纹身工作室 · 自2010年</p>
+    <h1 class="hero-title">
+      <span class="line1">将你的</span>
+      <span class="line2">故事</span>
+      <span class="line3">永刻于肤</span>
+    </h1>
+    <p class="hero-sub">每一道线条，都是一场仪式。每一幅图腾，都是一段记忆的凝结。我们以艺术之名，赋予你的皮肤以灵魂。</p>
+    <div class="hero-actions">
+      <a href="#booking" class="btn-primary">
+        <span>预约咨询</span>
+        <span>→</span>
+      </a>
+      <a href="#artists" class="btn-ghost">
+        <span>认识纹身师</span>
+        <span>↓</span>
+      </a>
+    </div>
+  </div>
+  <div class="hero-deco">
+    <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="200" cy="200" r="190" stroke="#c9a84c" stroke-width="0.5" stroke-dasharray="4 8"/>
+      <circle cx="200" cy="200" r="160" stroke="#c9a84c" stroke-width="0.5" opacity="0.5"/>
+      <circle cx="200" cy="200" r="130" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/>
+      <circle cx="200" cy="200" r="6" fill="#c9a84c"/>
+      <!-- petals -->
+      <path d="M200 60 Q240 130 200 200 Q160 130 200 60Z" stroke="#c9a84c" stroke-width="0.8" fill="none" opacity="0.6"/>
+      <path d="M200 340 Q160 270 200 200 Q240 270 200 340Z" stroke="#c9a84c" stroke-width="0.8" fill="none" opacity="0.6"/>
+      <path d="M60 200 Q130 160 200 200 Q130 240 60 200Z" stroke="#c9a84c" stroke-width="0.8" fill="none" opacity="0.6"/>
+      <path d="M340 200 Q270 240 200 200 Q270 160 340 200Z" stroke="#c9a84c" stroke-width="0.8" fill="none" opacity="0.6"/>
+      <path d="M101 101 Q161 161 200 200 Q139 161 101 101Z" stroke="#c9a84c" stroke-width="0.8" fill="none" opacity="0.4"/>
+      <path d="M299 101 Q239 161 200 200 Q261 161 299 101Z" stroke="#c9a84c" stroke-width="0.8" fill="none" opacity="0.4"/>
+      <path d="M101 299 Q161 239 200 200 Q161 261 101 299Z" stroke="#c9a84c" stroke-width="0.8" fill="none" opacity="0.4"/>
+      <path d="M299 299 Q239 239 200 200 Q261 239 299 299Z" stroke="#c9a84c" stroke-width="0.8" fill="none" opacity="0.4"/>
+      <!-- outer marks -->
+      <g opacity="0.4">
+        <line x1="200" y1="10" x2="200" y2="30" stroke="#c9a84c" stroke-width="1"/>
+        <line x1="200" y1="370" x2="200" y2="390" stroke="#c9a84c" stroke-width="1"/>
+        <line x1="10" y1="200" x2="30" y2="200" stroke="#c9a84c" stroke-width="1"/>
+        <line x1="370" y1="200" x2="390" y2="200" stroke="#c9a84c" stroke-width="1"/>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- ARTISTS -->
+<section id="artists">
+  <div class="artists-header reveal">
+    <div>
+      <p class="section-label">我们的纹身师</p>
+      <h2 class="section-title">Master Artists</h2>
+    </div>
+    <p style="max-width:340px; color:var(--ash); font-style:italic; font-size:15px; text-align:right;">每位纹身师都是各自风格领域的大师，拥有超过十年的精湛技艺。</p>
+  </div>
+  <div class="artists-grid">
+    <div class="artist-card reveal">
+      <div class="artist-img">
+        <div class="artist-img-bg"></div>
+        <div class="artist-avatar">
+          <div class="artist-initials">陈</div>
+        </div>
+      </div>
+      <div class="artist-info">
+        <div class="artist-name">陈 望远</div>
+        <div class="artist-style">黑灰 · 写实主义</div>
+        <div class="artist-tags">
+          <span class="tag">肖像</span>
+          <span class="tag">动物</span>
+          <span class="tag">暗黑</span>
+        </div>
+      </div>
+      <div class="artist-overlay">
+        <button class="artist-book-btn" onclick="selectArtist('陈 望远')">预约此纹身师</button>
+      </div>
+    </div>
+    <div class="artist-card reveal reveal-delay-2">
+      <div class="artist-img">
+        <div class="artist-img-bg"></div>
+        <div class="artist-avatar">
+          <div class="artist-initials">林</div>
+        </div>
+      </div>
+      <div class="artist-info">
+        <div class="artist-name">林 素月</div>
+        <div class="artist-style">细线 · 几何 · 水彩</div>
+        <div class="artist-tags">
+          <span class="tag">花卉</span>
+          <span class="tag">几何</span>
+          <span class="tag">精细</span>
+        </div>
+      </div>
+      <div class="artist-overlay">
+        <button class="artist-book-btn" onclick="selectArtist('林 素月')">预约此纹身师</button>
+      </div>
+    </div>
+    <div class="artist-card reveal reveal-delay-3">
+      <div class="artist-img">
+        <div class="artist-img-bg"></div>
+        <div class="artist-avatar">
+          <div class="artist-initials">方</div>
+        </div>
+      </div>
+      <div class="artist-info">
+        <div class="artist-name">方 墨轩</div>
+        <div class="artist-style">传统 · 日式 · 东方</div>
+        <div class="artist-tags">
+          <span class="tag">龙鱼</span>
+          <span class="tag">传统</span>
+          <span class="tag">彩色</span>
+        </div>
+      </div>
+      <div class="artist-overlay">
+        <button class="artist-book-btn" onclick="selectArtist('方 墨轩')">预约此纹身师</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STYLES -->
+<section id="styles">
+  <div class="reveal" style="text-align:center; max-width:600px; margin:0 auto;">
+    <p class="section-label">纹身风格</p>
+    <h2 class="section-title">我们擅长的<br>艺术流派</h2>
+  </div>
+  <div class="styles-grid">
+    <div class="style-card reveal">
+      <span class="style-num">01</span>
+      <span class="style-icon">🖤</span>
+      <div class="style-name">黑灰写实</div>
+      <p class="style-desc">以深浅灰阶描绘光影，将照片级别的细节永刻于皮肤之上。</p>
+    </div>
+    <div class="style-card reveal reveal-delay-1">
+      <span class="style-num">02</span>
+      <span class="style-icon">🌿</span>
+      <div class="style-name">细线植物</div>
+      <p class="style-desc">如铅笔素描般细腻的线条，呈现自然界最纤细优雅的形态。</p>
+    </div>
+    <div class="style-card reveal reveal-delay-2">
+      <span class="style-num">03</span>
+      <span class="style-icon">⛩</span>
+      <div class="style-name">日式传统</div>
+      <p class="style-desc">源自江户时代的纹样美学，龙、鲤、菊花共同构成东方意境。</p>
+    </div>
+    <div class="style-card reveal reveal-delay-3">
+      <span class="style-num">04</span>
+      <span class="style-icon">🔺</span>
+      <div class="style-name">几何图腾</div>
+      <p class="style-desc">精确的线条与数学之美，将宇宙秩序投影在皮肤上。</p>
+    </div>
+    <div class="style-card reveal">
+      <span class="style-num">05</span>
+      <span class="style-icon">🎨</span>
+      <div class="style-name">水彩晕染</div>
+      <p class="style-desc">突破轮廓的束缚，让色彩自由流淌，如画布上的水彩画作。</p>
+    </div>
+    <div class="style-card reveal reveal-delay-1">
+      <span class="style-num">06</span>
+      <span class="style-icon">✦</span>
+      <div class="style-name">新传统</div>
+      <p class="style-desc">融合古典美式传统与现代审美，粗线条轮廓搭配丰富填色。</p>
+    </div>
+    <div class="style-card reveal reveal-delay-2">
+      <span class="style-num">07</span>
+      <span class="style-icon">🌊</span>
+      <div class="style-name">极简线条</div>
+      <p class="style-desc">Less is more的哲学，用最简练的线条传达最深刻的意义。</p>
+    </div>
+    <div class="style-card reveal reveal-delay-3">
+      <span class="style-num">08</span>
+      <span class="style-icon">🐉</span>
+      <div class="style-name">中国风</div>
+      <p class="style-desc">将书法、国画、民俗图案融入当代纹身美学的东方表达。</p>
+    </div>
+  </div>
+</section>
+
+<!-- BOOKING -->
+<section id="booking">
+  <div class="reveal">
+    <p class="section-label">预约咨询</p>
+    <h2 class="section-title">开启你的<br>仪式之旅</h2>
+  </div>
+  <div class="booking-layout">
+    <div class="booking-info reveal">
+      <h3>预约须知</h3>
+      <p>每一次纹身都是独一无二的创作旅程。请在预约前认真阅读以下事项，以确保我们能为你提供最完美的体验。</p>
+      <ul class="info-list">
+        <li>预约后请保持联系，我们的纹身师将与你充分沟通设计方案</li>
+        <li>首次预约需支付30%定金以确认档期</li>
+        <li>如需取消，请至少提前48小时告知</li>
+        <li>纹身当天请保证充分休息，避免空腹</li>
+        <li>避开皮肤敏感期、月经期及特殊健康状况</li>
+      </ul>
+      <h3>工作室地址</h3>
+      <p>上海市静安区南京西路1515号<br>嘉里中心南座 B1层<br>营业时间：周二至周日 11:00–21:00</p>
+      <h3>联系方式</h3>
+      <p>微信：InkRitual_Studio<br>电话：021-6288-XXXX<br>邮箱：hello@inkritual.cn</p>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="booking-form" id="bookingForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>姓名</label>
+            <input type="text" id="fname" placeholder="你的名字" />
+          </div>
+          <div class="form-group">
+            <label>联系电话</label>
+            <input type="tel" id="fphone" placeholder="手机号码" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>选择纹身师</label>
+          <select id="fartist">
+            <option value="">— 请选择纹身师 —</option>
+            <option value="陈 望远">陈 望远 · 黑灰写实</option>
+            <option value="林 素月">林 素月 · 细线几何水彩</option>
+            <option value="方 墨轩">方 墨轩 · 传统日式东方</option>
+            <option value="任意">不指定，由工作室推荐</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>纹身风格</label>
+          <select id="fstyle">
+            <option value="">— 请选择风格 —</option>
+            <option>黑灰写实</option>
+            <option>细线植物</option>
+            <option>日式传统</option>
+            <option>几何图腾</option>
+            <option>水彩晕染</option>
+            <option>新传统</option>
+            <option>极简线条</option>
+            <option>中国风</option>
+            <option>暂不确定</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>纹身尺寸</label>
+          <div class="size-options">
+            <div>
+              <input type="radio" name="size" id="sXS" class="size-opt" value="XS">
+              <label for="sXS"><span class="size-icon">·</span><span class="size-name">微型<br>3cm内</span></label>
+            </div>
+            <div>
+              <input type="radio" name="size" id="sS" class="size-opt" value="S">
+              <label for="sS"><span class="size-icon">◦</span><span class="size-name">小型<br>3-8cm</span></label>
+            </div>
+            <div>
+              <input type="radio" name="size" id="sM" class="size-opt" value="M">
+              <label for="sM"><span class="size-icon">○</span><span class="size-name">中型<br>8-15cm</span></label>
+            </div>
+            <div>
+              <input type="radio" name="size" id="sL" class="size-opt" value="L">
+              <label for="sL"><span class="size-icon">◯</span><span class="size-name">大型<br>15cm+</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>纹身部位</label>
+          <div class="location-select">
+            <div><input type="radio" name="loc" id="loc1" class="loc-opt"><label for="loc1">手腕</label></div>
+            <div><input type="radio" name="loc" id="loc2" class="loc-opt"><label for="loc2">前臂</label></div>
+            <div><input type="radio" name="loc" id="loc3" class="loc-opt"><label for="loc3">上臂</label></div>
+            <div><input type="radio" name="loc" id="loc4" class="loc-opt"><label for="loc4">肩部</label></div>
+            <div><input type="radio" name="loc" id="loc5" class="loc-opt"><label for="loc5">胸口</label></div>
+            <div><input type="radio" name="loc" id="loc6" class="loc-opt"><label for="loc6">背部</label></div>
+            <div><input type="radio" name="loc" id="loc7" class="loc-opt"><label for="loc7">腰侧</label></div>
+            <div><input type="radio" name="loc" id="loc8" class="loc-opt"><label for="loc8">大腿</label></div>
+            <div><input type="radio" name="loc" id="loc9" class="loc-opt"><label for="loc9">脚踝</label></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>预算范围</label>
+          <div class="budget-slider-wrap">
+            <div class="budget-display">
+              <span class="budget-value" id="budgetVal">¥2,000</span>
+              <span class="budget-hint">约 2–4 小时</span>
+            </div>
+            <input type="range" id="budgetRange" min="500" max="10000" step="500" value="2000">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>期望预约日期</label>
+            <input type="date" id="fdate" />
+          </div>
+          <div class="form-group">
+            <label>期望时间段</label>
+            <div class="slot-grid">
+              <div><input type="radio" name="slot" id="s10" class="slot-opt"><label for="s10">10:00</label></div>
+              <div><input type="radio" name="slot" id="s12" class="slot-opt taken"><label for="s12">12:00</label></div>
+              <div><input type="radio" name="slot" id="s14" class="slot-opt"><label for="s14">14:00</label></div>
+              <div><input type="radio" name="slot" id="s16" class="slot-opt"><label for="s16">16:00</label></div>
+              <div><input type="radio" name="slot" id="s18" class="slot-opt taken"><label for="s18">18:00</label></div>
+              <div><input type="radio" name="slot" id="s19" class="slot-opt"><label for="s19">19:00</label></div>
+              <div><input type="radio" name="slot" id="s20" class="slot-opt"><label for="s20">20:00</label></div>
+              <div><input type="radio" name="slot" id="sany" class="slot-opt"><label for="sany">随机</label></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>描述你的想法</label>
+          <textarea id="fdesc" placeholder="请描述你心目中纹身的主题、意义、参考图案，或任何你想表达的内容。我们的纹身师将根据你的描述为你量身定制设计方案……"></textarea>
+        </div>
+        <button class="form-submit" onclick="submitForm()">✦ &nbsp;提交预约申请 &nbsp;✦</button>
+      </div>
+      <div class="form-success" id="formSuccess">
+        <div class="success-icon">✦</div>
+        <h3>预约申请已收到</h3>
+        <p>感谢你选择 INK RITUAL。<br>我们的纹身师将在24小时内与你取得联系，<br>共同开启这场属于你的仪式之旅。</p>
+        <p style="color:var(--gold-dim); font-size:13px; letter-spacing:0.2em;">请关注我们的微信：InkRitual_Studio</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="reveal" style="text-align:center; max-width:500px; margin:0 auto;">
+    <p class="section-label">预约流程</p>
+    <h2 class="section-title">四步开启<br>你的仪式</h2>
+  </div>
+  <div class="process-steps">
+    <div class="step reveal">
+      <div class="step-num">01</div>
+      <div class="step-title">提交预约</div>
+      <p class="step-desc">填写预约表单，描述你的想法、偏好风格及预算，我们将认真对待每一份申请。</p>
+    </div>
+    <div class="step reveal reveal-delay-1">
+      <div class="step-num">02</div>
+      <div class="step-title">深度沟通</div>
+      <p class="step-desc">纹身师主动联系你，深入了解你的故事与期望，共同确认设计方向与细节。</p>
+    </div>
+    <div class="step reveal reveal-delay-2">
+      <div class="step-num">03</div>
+      <div class="step-title">方案设计</div>
+      <p class="step-desc">纹身师为你量身定制专属图案，提供草稿预览，反复修改直至完美呈现。</p>
+    </div>
+    <div class="step reveal reveal-delay-3">
+      <div class="step-num">04</div>
+      <div class="step-title">永刻仪式</div>
+      <p class="step-desc">在安静而神圣的工作室氛围中，见证属于你的图腾在皮肤上缓缓诞生。</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <a href="#" class="logo">INK<span> RITUAL</span></a>
+    <p>将艺术永刻于肤，<br>让故事永存于身。<br><br>上海 · 自2010年</p>
+  </div>
+  <div class="footer-col">
+    <h4>导航</h4>
+    <ul>
+      <li><a href="#artists">纹身师</a></li>
+      <li><a href="#styles">风格流派</a></li>
+      <li><a href="#process">预约流程</a></li>
+      <li><a href="#booking">立即预约</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>政策</h4>
+    <ul>
+      <li><a href="#">护理指南</a></li>
+      <li><a href="#">退款政策</a></li>
+      <li><a href="#">健康须知</a></li>
+      <li><a href="#">隐私政策</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>关注我们</h4>
+    <ul>
+      <li><a href="#">微信公众号</a></li>
+      <li><a href="#">小红书</a></li>
+      <li><a href="#">Instagram</a></li>
+      <li><a href="#">微博</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <p>© 2024 INK RITUAL STUDIO · 上海纹身工作室</p>
+  <p style="color:var(--gold-dim); font-size:11px; letter-spacing:0.3em;">每一道线条，皆是仪式</p>
+</div>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx - 4 + 'px';
+    cursor.style.top = my - 4 + 'px';
+  });
+  (function animRing() {
+    rx += (mx - rx) * 0.15;
+    ry += (my - ry) * 0.15;
+    ring.style.left = rx - 16 + 'px';
+    ring.style.top = ry - 16 + 'px';
+    requestAnimationFrame(animRing);
+  })();
+
+  // Nav scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', scrollY > 60);
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Budget slider
+  const range = document.getElementById('budgetRange');
+  const budgetVal = document.getElementById('budgetVal');
+  const timeHints = { 500:'约30分钟', 1000:'约1小时', 1500:'约1–2小时', 2000:'约2–4小时', 3000:'约半天', 5000:'约一整天', 8000:'大型定制项目', 10000:'全背·整臂套装' };
+  function updateBudget() {
+    const v = parseInt(range.value);
+    budgetVal.textContent = '¥' + v.toLocaleString();
+    const keys = Object.keys(timeHints).map(Number).sort((a,b)=>a-b);
+    let hint = timeHints[10000];
+    for (let k of keys) { if (v <= k) { hint = timeHints[k]; break; } }
+    document.querySelector('.budget-hint').textContent = hint;
+    const pct = ((v - 500) / (10000 - 500) * 100).toFixed(1) + '%';
+    range.style.setProperty('--pct', pct);
+  }
+  range.addEventListener('input', updateBudget);
+  updateBudget();
+
+  // Set min date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('fdate').min = today;
+
+  // Select artist from card
+  function selectArtist(name) {
+    document.getElementById('fartist').value = name;
+    document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Submit form
+  function submitForm() {
+    const name = document.getElementById('fname').value.trim();
+    const phone = document.getElementById('fphone').value.trim();
+    if (!name || !phone) {
+      // shake effect
+      const btn = document.querySelector('.form-submit');
+      btn.style.animation = 'none';
+      btn.style.background = '#8b2020';
+      btn.textContent = '请填写姓名和电话';
+      setTimeout(() => {
+        btn.style.background = '';
+        btn.innerHTML = '✦ &nbsp;提交预约申请 &nbsp;✦';
+      }, 2000);
+      return;
+    }
+    document.getElementById('bookingForm').style.display = 'none';
+    document.getElementById('formSuccess').classList.add('show');
+  }
+</script>
+</body>
+</html>
